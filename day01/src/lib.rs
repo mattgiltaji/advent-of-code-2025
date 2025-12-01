@@ -1,14 +1,18 @@
-use std::fs::File;
-use std::io::BufReader;
-use std::io::BufRead;
-use std::path::Path;
+use std::{
+    io::BufRead,
+    io::BufReader,
+    fs::File,
+    path::Path
+};
 
-pub fn rotate(start: u32, clicks: u32, direction: char) -> u32 {
+pub fn rotate(start: u32, clicks: u32, direction: char) -> (u32, u32) {
     let mut position:i32;
+    let mut zeroes:u32 = 0;
     //we can discard batches of 100 clicks since they end up at same place on dial
     let mut relevant_clicks = clicks;
     while relevant_clicks > 100 {
         relevant_clicks = relevant_clicks - 100;
+        zeroes += 1;
     }
 
     if direction == 'R' {
@@ -16,17 +20,19 @@ pub fn rotate(start: u32, clicks: u32, direction: char) -> u32 {
         position = (start + relevant_clicks) as i32;
         if position > 99 {
             position = position - 100;
+            zeroes += 1;
         }
     } else if direction == 'L' {
         //turning left, going lower, might pass 0
         position = (start) as i32 - (relevant_clicks) as i32;
         if position < 0 {
             position = position + 100;
+            zeroes += 1;
         }
     } else {
         panic!("invalid direction {direction}")
     }
-    position as u32
+    (position as u32, zeroes)
 }
 
 pub fn parse_input_line(input: &str) -> (char, u32){
@@ -36,18 +42,18 @@ pub fn parse_input_line(input: &str) -> (char, u32){
     (direction, clicks)
 }
 
-pub fn check_safe(input: File) -> u32 {
+pub fn check_safe(input: File) -> (u32, u32) {
     let mut dial:u32 = 50;
     let mut rests_at_zero:u32 = 0;
+    let mut extra_zeroes:u32;
     let buf = BufReader::new(input);
     for line in buf.lines() {
         let (direction, clicks) = parse_input_line(&line.expect("weird line"));
-        dial = rotate(dial, clicks, direction);
-        if dial == 0 {
-            rests_at_zero += 1;
-        }
+        (dial, extra_zeroes) = rotate(dial, clicks, direction);
+        rests_at_zero += extra_zeroes;
     }
-    rests_at_zero
+
+    (rests_at_zero, dial)
 }
 
 #[cfg(test)]
@@ -57,31 +63,31 @@ mod tests {
     #[test]
     fn rotate_small_right_works() {
         let result = rotate(50, 13, 'R');
-        assert_eq!(result, 63);
+        assert_eq!(result, (63, 0));
     }
 
     #[test]
     fn rotate_big_right_works() {
         let result = rotate(50, 10063, 'R');
-        assert_eq!(result, 13);
+        assert_eq!(result, (13, 101));
     }
 
     #[test]
     fn rotate_small_left_works() {
         let result = rotate(50, 12, 'L');
-        assert_eq!(result, 38);
+        assert_eq!(result, (38, 0));
     }
 
     #[test]
     fn rotate_big_left_works() {
         let result = rotate(50, 10045, 'L');
-        assert_eq!(result, 5);
+        assert_eq!(result, (5, 100));
     }
 
     #[test]
     fn rotate_big_left_overflow_works() {
         let result = rotate(50, 10055, 'L');
-        assert_eq!(result, 95);
+        assert_eq!(result, (95, 101));
     }
 
     #[test]
@@ -107,7 +113,15 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test1.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = check_safe(data);
-        assert_eq!(result, 3);
+        assert_eq!(result, (6, 32));
+    }
+
+    #[test]
+    fn check_safe_example_2_works() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test2.txt");
+        let data = File::open(path).expect("test1.txt file missing");
+        let result = check_safe(data);
+        assert_eq!(result, (8, 50));
     }
 
     #[test]
@@ -115,7 +129,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/input.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = check_safe(data);
-        assert_eq!(result, 1043);
+        assert_eq!(result, (5956, 97));
     }
 
 
