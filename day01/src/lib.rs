@@ -9,34 +9,38 @@ pub fn rotate(start: u32, clicks: u32, direction: char) -> (u32, u32) {
     let mut position:i32 = start as i32;
     let mut zeroes:u32 = 0;
     //we can discard batches of 100 clicks since they end up at same place on dial
-    let relevant_clicks = clicks;
-    /*while relevant_clicks > 100 {
+    let mut relevant_clicks = clicks;
+    while relevant_clicks > 100 {
         relevant_clicks = relevant_clicks - 100;
         zeroes += 1;
-    }*/
+    }
 
     if direction == 'R' {
         // turning right, going higher, might pass 99
         for _ in 0..= relevant_clicks - 1 {
-            if position == 99 {
-                position = -1;
+            position += 1;
+            if position == 100 {
+                position = 0;
+            }
+            if position == 0 {
                 zeroes += 1;
             }
-            position += 1;
         }
     } else if direction == 'L' {
         //turning left, going lower, might pass 0
         for _ in 0..= relevant_clicks - 1 {
+            position -= 1;
+            if position == -1 {
+                position = 99;
+            }
             if position == 0 {
-                position = 100;
                 zeroes += 1;
             }
-            position -= 1;
         }
     } else {
         panic!("invalid direction {direction}")
     }
-    println!("{direction} to position {position} and encountered {zeroes} zeroes");
+    //println!("{direction} to position {position} and encountered {zeroes} zeroes");
     (position as u32, zeroes)
 }
 
@@ -134,7 +138,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/input.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = check_safe(data);
-        assert_eq!(result, (5956, 97));
+        assert_eq!(result, (5963, 97));
     }
 
 
