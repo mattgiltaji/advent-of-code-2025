@@ -18,11 +18,11 @@ pub fn rotate(start: u32, clicks: u32, direction: char) -> (u32, u32) {
     if direction == 'R' {
         // turning right, going higher, might pass 99
         for _ in 0..= relevant_clicks - 1 {
-            position += 1;
-            if position == 100 {
-                position = 0;
+            if position == 99 {
+                position = -1;
                 zeroes += 1;
             }
+            position += 1;
         }
     } else if direction == 'L' {
         //turning left, going lower, might pass 0
