@@ -6,32 +6,37 @@ use std::{
 };
 
 pub fn rotate(start: u32, clicks: u32, direction: char) -> (u32, u32) {
-    let mut position:i32;
+    let mut position:i32 = start as i32;
     let mut zeroes:u32 = 0;
     //we can discard batches of 100 clicks since they end up at same place on dial
-    let mut relevant_clicks = clicks;
-    while relevant_clicks > 100 {
+    let relevant_clicks = clicks;
+    /*while relevant_clicks > 100 {
         relevant_clicks = relevant_clicks - 100;
         zeroes += 1;
-    }
+    }*/
 
     if direction == 'R' {
         // turning right, going higher, might pass 99
-        position = (start + relevant_clicks) as i32;
-        if position > 99 {
-            position = position - 100;
-            zeroes += 1;
+        for _ in 0..= relevant_clicks - 1 {
+            position += 1;
+            if position == 100 {
+                position = 0;
+                zeroes += 1;
+            }
         }
     } else if direction == 'L' {
         //turning left, going lower, might pass 0
-        position = (start) as i32 - (relevant_clicks) as i32;
-        if position < 0 {
-            position = position + 100;
-            zeroes += 1;
+        for _ in 0..= relevant_clicks - 1 {
+            if position == 0 {
+                position = 100;
+                zeroes += 1;
+            }
+            position -= 1;
         }
     } else {
         panic!("invalid direction {direction}")
     }
+    println!("{direction} to position {position} and encountered {zeroes} zeroes");
     (position as u32, zeroes)
 }
 
@@ -121,7 +126,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test2.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = check_safe(data);
-        assert_eq!(result, (8, 50));
+        assert_eq!(result, (10, 50));
     }
 
     #[test]
