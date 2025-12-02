@@ -1,36 +1,46 @@
 use std::{
     io::BufRead,
     io::BufReader,
-    fs::File
+    fs::File,
+    sync::LazyLock
 };
+use fancy_regex::Regex;
 
 /// Returns true if the id is valid.
-/// A valid ID is **not** made up of the same substring repeated twice
+/// A valid ID is **not** made up of the same substring repeated two or more times
 ///
 /// # Examples
 ///
 /// ```
-/// let good1 = day02::is_valid_id(123321);
-/// assert!(good1);
+/// let good = day02::is_valid_id(123321);
+/// assert!(good);
 /// ```
 /// ```
-/// let good2 = day02::is_valid_id(101);
-/// assert!(good2);
+/// let good = day02::is_valid_id(101);
+/// assert!(good);
 /// ```
 /// ```
-/// let bad = day02::is_valid_id(13121312);
-/// assert!(!bad);
+/// let twice = day02::is_valid_id(13121312);
+/// assert!(!twice);
+/// ```
+/// ```
+/// let thrice = day02::is_valid_id(999);
+/// assert!(!thrice);
+/// ```
+/// ```
+/// let so_many = day02::is_valid_id(1111111);
+/// assert!(!so_many);
 /// ```
 pub fn is_valid_id(input: u64) -> bool {
     let str_input = input.to_string();
-    let len = str_input.chars().count();
-    if len % 2 == 1 {
-        // odd number can't be a duplicated substring
-        true
-    } else {
-        let (front, back) = str_input.trim().split_at(len / 2);
-        front != back
-    }
+    let trimmed = str_input.trim();
+    static RE: LazyLock<Regex> = LazyLock::new (|| Regex::new(r"^(\d{1,6})(\1)+$").expect("weird regex pattern"));
+    // regex looks for a sequence of up to 6 digits that are repeated multiple times
+    // the number 6 is arbitrary and assumes that we are getting at most a 12-digit number,
+    //   so we only need to match up to half the digits.
+    let dupes = RE.is_match(trimmed).expect("weird regex match");
+    let valid = !dupes;
+    valid
 }
 
 /// Returns a vector of invalid IDs from an inclusive range between start and end inputs
@@ -43,7 +53,7 @@ pub fn is_valid_id(input: u64) -> bool {
 /// ```
 /// ```
 /// let results = day02::get_invalid_ids_from_range(95,115);
-/// assert_eq!(results, [99])
+/// assert_eq!(results, [99, 111])
 /// ```
 /// ```
 /// let results = day02::get_invalid_ids_from_range(1698522,1698528);
@@ -56,6 +66,7 @@ pub fn get_invalid_ids_from_range(start:u64, end:u64) -> Vec<u64> {
             result.push(i);
         }
     }
+    //println!("found {result:?} invalid IDs");
     result
 }
 
@@ -72,7 +83,7 @@ pub fn get_invalid_ids_from_range(start:u64, end:u64) -> Vec<u64> {
 /// assert_eq!(results, (2121212118, 2121212124))
 /// ```
 pub fn parse_range_from_string(input: String) -> (u64, u64) {
-    println!("parsing range from {input}");
+    //println!("parsing range from {input}");
     let parts: Vec<&str> = input.split('-').collect();
     let front = parts[0].trim();
     let back = parts[1].trim();
@@ -108,7 +119,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test1.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = sum_invalid_ids(data);
-        assert_eq!(result, 1227775554);
+        assert_eq!(result, 4174379265);
     }
 
     #[test]
@@ -116,6 +127,6 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/input.txt");
         let data = File::open(path).expect("input.txt file missing");
         let result = sum_invalid_ids(data);
-        assert_eq!(result, 64215794229);
+        assert_eq!(result, 85513235135);
     }
 }
