@@ -1,8 +1,7 @@
 use std::{
     io::BufRead,
     io::BufReader,
-    fs::File,
-    path::Path
+    fs::File
 };
 
 pub fn rotate(start: u32, clicks: u32, direction: char) -> (u32, u32) {
@@ -68,6 +67,7 @@ pub fn check_safe(input: File) -> (u32, u32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn rotate_small_right_works() {
