@@ -34,7 +34,7 @@ use fancy_regex::Regex;
 pub fn is_valid_id(input: u64) -> bool {
     let str_input = input.to_string();
     let trimmed = str_input.trim();
-    static RE: LazyLock<Regex> = LazyLock::new (|| Regex::new(r"^(\d{1,6})(\1)+$").expect("weird regex pattern"));
+    static RE: LazyLock<Regex> = LazyLock::new (|| Regex::new(r"^(\d+)(\1)+$").expect("weird regex pattern"));
     // regex looks for a sequence of up to 6 digits that are repeated multiple times
     // the number 6 is arbitrary and assumes that we are getting at most a 12-digit number,
     //   so we only need to match up to half the digits.
