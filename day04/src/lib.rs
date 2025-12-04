@@ -5,26 +5,31 @@ use std::io::BufReader;
 /// Returns the count of movable rolls in the current line
 /// previous and next lines are needed for determining if a roll in the current line can move
 /// a roll can move if the 8 adjacent positions contain fewer than 4 rolls
+/// if a roll is removeable, remove it before checking subsequent spots
 ///
 /// # Examples
 ///
 /// ```
-/// let rolls = day04::get_roll_count_by_line(String::from(".........."), String::from("..@@.@@@@."), String::from("@@@.@.@.@@"));
-/// assert_eq!(rolls, 5)
+/// let (rolls, line) = day04::get_roll_count_by_line(String::from(".........."), String::from("..@@.@@@@."), String::from("@@@.@.@.@@"));
+/// assert_eq!(rolls, 6);
+/// assert_eq!(line, String::from(".........."));
 /// ```
 /// ```
-/// let rolls = day04::get_roll_count_by_line(String::from("@@.@@@@.@@"), String::from(".@@@@@@@.@"), String::from(".@.@.@.@@@"));
-/// assert_eq!(rolls, 0)
+/// let (rolls, line) = day04::get_roll_count_by_line(String::from("@@.@@@@.@@"), String::from(".@@@@@@@.@"), String::from(".@.@.@.@@@"));
+/// assert_eq!(rolls, 0);
+/// assert_eq!(line, String::from(".@@@@@@@.@"));
 /// ```
 /// ```
-/// let rolls = day04::get_roll_count_by_line(String::from(".@@@@@@@@."), String::from("@.@.@@@.@."), String::from(".........."));
-/// assert_eq!(rolls, 3)
+/// let (rolls, line) = day04::get_roll_count_by_line(String::from(".@@@@@@@@."), String::from("@.@.@@@.@."), String::from(".........."));
+/// assert_eq!(rolls, 3);
+/// assert_eq!(line, String::from("....@@@..."));
 /// ```
 /// ```
-/// let rolls = day04::get_roll_count_by_line(String::from("@.@@@@..@."), String::from("@@.@@@@.@@"), String::from(".@@@@@@@.@"));
-/// assert_eq!(rolls, 2)
+/// let (rolls, line) = day04::get_roll_count_by_line(String::from("@.@@@@..@."), String::from("@@.@@@@.@@"), String::from(".@@@@@@@.@"));
+/// assert_eq!(rolls, 2);
+/// assert_eq!(line, String::from(".@.@@@@.@."));
 /// ```
-pub fn get_roll_count_by_line(prev: String, curr: String, next: String) -> u64 {
+pub fn get_roll_count_by_line(prev: String, curr: String, next: String) -> (u64, String) {
     let mut rolls: u64 = 0;
     let mut my_prev: Vec<char> = prev.chars().collect();
     let mut my_curr: Vec<char> = curr.chars().collect();
@@ -63,48 +68,54 @@ pub fn get_roll_count_by_line(prev: String, curr: String, next: String) -> u64 {
         //other_rolls now has all adjacent rolls, including the middle one, so compare to 5, not 4
         if other_rolls < 5 {
             rolls += 1;
+            my_curr[i] = '.';
         }
     }
-
-    rolls
+    //undo the leading and trailing dots we added to my_curr to prep it for returning
+    my_curr.remove(0);
+    my_curr.pop();
+    let removed_curr = my_curr.into_iter().collect();
+    (rolls, removed_curr)
 }
 
 pub fn get_total_rolls(input: File) -> u64 {
     let mut result: u64 = 0;
+    let mut rolls_removed:u64;
     let buf = BufReader::new(input);
     let mut prev_line: String;
     let mut curr_line: String = String::new();
     let mut next_line: String = String::new();
+    let mut data:Vec<String> = Vec::new();
 
+    //read whole file into vector so we can loop over it
     for line in buf.lines() {
         let validated_line = line.expect("weird line");
-        prev_line = curr_line;
-        curr_line = next_line;
-        next_line = validated_line;
-        if curr_line.is_empty() {
-            //first line ever read, skip it because we need the next line
-            //but set it up full of dots for the next pass
-            let size = next_line.len();
-            let filler = vec!['.'; size];
-            curr_line = filler.into_iter().collect();
-            continue;
-        }
-
-        let line_rolls =
-            get_roll_count_by_line(prev_line.clone(), curr_line.clone(), next_line.clone());
-        result += line_rolls;
-        //println!("got {line_rolls} from processing {curr_line}");
+        data.push(validated_line);
     }
-    //need to do one final run here with next_line full of dots
-    if !curr_line.is_empty() {
-        let size = curr_line.len();
-        let filler = vec!['.'; size];
-        prev_line = curr_line;
-        curr_line = next_line;
-        next_line = filler.into_iter().collect();
-        let line_rolls =
-            get_roll_count_by_line(prev_line.clone(), curr_line.clone(), next_line.clone());
-        result += line_rolls;
+
+    //add leading and trailing dot lines
+    let length = data[0].len();
+    let filler = vec!['.'; length];
+    let filler_str:String = filler.into_iter().collect();
+    let data_size = data.len();
+    data.insert(0,filler_str.clone());
+    data.push(filler_str.clone());
+
+    loop {
+        rolls_removed = 0;
+        for i in 1..data_size+1 {
+            prev_line = data[i-1].clone();
+            curr_line = data[i].clone();
+            next_line = data[i+1].clone();
+            let (line_rolls, new_curr) = get_roll_count_by_line(prev_line, curr_line, next_line);
+            rolls_removed += line_rolls;
+            data[i] = new_curr;
+        }
+        result += rolls_removed;
+
+        if rolls_removed == 0 {
+            break;
+        }
     }
 
     result
@@ -120,7 +131,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test1.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = get_total_rolls(data);
-        assert_eq!(result, 13);
+        assert_eq!(result, 43);
     }
 
     #[test]
@@ -128,6 +139,6 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/input.txt");
         let data = File::open(path).expect("input.txt file missing");
         let result = get_total_rolls(data);
-        assert_eq!(result, 1467);
+        assert_eq!(result, 8484);
     }
 }
