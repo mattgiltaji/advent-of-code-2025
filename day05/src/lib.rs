@@ -33,37 +33,61 @@ pub fn check_freshness(ingredient:u64, ranges:Vec<(u64, u64)>) -> bool {
     is_fresh
 }
 
+/// Merges overlapping intervals and returns the shortened interval vector
+///
+/// # Examples
+/// ```
+/// let mut input: Vec<(u64, u64)> = vec![(3,5), (10,14), (16,20), (12,18)];
+/// let result = day05::merge_overlapping_intervals(&mut input);
+/// assert_eq!(result[0], (3,5));
+/// assert_eq!(result[1], (10,20));
+/// ```
+pub fn merge_overlapping_intervals(arr: &mut Vec<(u64, u64)>) -> Vec<(u64, u64)> {
+    let mut result: Vec<(u64, u64)> = Vec::new();
+    arr.sort_by(|(a, _),(c,_)| a.cmp(&c));
+    result.push(arr[0].clone());
+    let size = arr.len();
+
+    for i in 1..size {
+        let (a, b) = arr[i].clone();
+        let last:usize = result.len() - 1;
+        let (x, y) = result[last];
+        if a >= x && a <= y {
+            //a is in the current interval
+            if b > y {
+                //b is outside the current interval, expand it
+                result[last] = (x, b);
+            } //b is inside the current interval, fully overlapped, move on to the next
+        } else {
+            result.push((a,b));
+        }
+    }
+    result
+}
 
 pub fn get_total_fresh(input: File) -> u64 {
     let mut result: u64 = 0;
     let buf = BufReader::new(input);
     let mut ranges:Vec<(u64,u64)> = Vec::new();
-    let mut ingredients:Vec<u64> = Vec::new();
-    let mut range_time = true;
 
     for line in buf.lines() {
         let validated_line = line.expect("weird line");
         if validated_line.is_empty() {
-            range_time = false;
-            continue;
+            //ignore ingredient ids, we'll populate them ourselves
+            break;
         }
-        if range_time{
-            let (s, e) = validated_line.split_once('-').unwrap();
-            let start:u64 = s.parse().unwrap();
-            let end:u64 = e.parse().unwrap();
-            ranges.push((start, end));
-        } else {
-            let ingredient:u64 = validated_line.parse().unwrap();
-            ingredients.push(ingredient);
-        }
+
+        let (s, e) = validated_line.split_once('-').unwrap();
+        let start:u64 = s.parse().unwrap();
+        let end:u64 = e.parse().unwrap();
+        ranges.push((start, end));
+
     }
+    //consolidate ranges
+    ranges = merge_overlapping_intervals(&mut ranges);
 
-    //we might need to optimize ranges here... like sort it, merge the overlaps, etc
-
-    for i in ingredients {
-        if check_freshness(i, ranges.clone()){
-            result += 1;
-        }
+    for (i, j) in ranges.clone() {
+        result += j - i + 1;
     }
 
     result
@@ -78,7 +102,7 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/test1.txt");
         let data = File::open(path).expect("test1.txt file missing");
         let result = get_total_fresh(data);
-        assert_eq!(result, 3);
+        assert_eq!(result, 14);
     }
 
     #[test]
@@ -86,6 +110,6 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/input.txt");
         let data = File::open(path).expect("input.txt file missing");
         let result = get_total_fresh(data);
-        assert_eq!(result, 679);
+        assert_eq!(result, 358155203664116);
     }
 }
