@@ -17,7 +17,7 @@ use std::io::{BufRead, BufReader};
 /// let fresh = day05::check_freshness(8, vec![(3,5), (10,14), (16,20)]);
 /// assert!(!fresh);
 /// ```
-pub fn check_freshness(ingredient:u64, ranges:Vec<(u64, u64)>) -> bool {
+pub fn check_freshness(ingredient: u64, ranges: Vec<(u64, u64)>) -> bool {
     let mut is_fresh = false;
 
     for (lower, upper) in ranges {
@@ -44,13 +44,13 @@ pub fn check_freshness(ingredient:u64, ranges:Vec<(u64, u64)>) -> bool {
 /// ```
 pub fn merge_overlapping_intervals(arr: &mut Vec<(u64, u64)>) -> Vec<(u64, u64)> {
     let mut result: Vec<(u64, u64)> = Vec::new();
-    arr.sort_by(|(a, _),(c,_)| a.cmp(&c));
+    arr.sort_by(|(a, _), (c, _)| a.cmp(&c));
     result.push(arr[0].clone());
     let size = arr.len();
 
     for i in 1..size {
         let (a, b) = arr[i].clone();
-        let last:usize = result.len() - 1;
+        let last: usize = result.len() - 1;
         let (x, y) = result[last];
         if a >= x && a <= y {
             //a is in the current interval
@@ -59,7 +59,7 @@ pub fn merge_overlapping_intervals(arr: &mut Vec<(u64, u64)>) -> Vec<(u64, u64)>
                 result[last] = (x, b);
             } //b is inside the current interval, fully overlapped, move on to the next
         } else {
-            result.push((a,b));
+            result.push((a, b));
         }
     }
     result
@@ -68,7 +68,7 @@ pub fn merge_overlapping_intervals(arr: &mut Vec<(u64, u64)>) -> Vec<(u64, u64)>
 pub fn get_total_fresh(input: File) -> u64 {
     let mut result: u64 = 0;
     let buf = BufReader::new(input);
-    let mut ranges:Vec<(u64,u64)> = Vec::new();
+    let mut ranges: Vec<(u64, u64)> = Vec::new();
 
     for line in buf.lines() {
         let validated_line = line.expect("weird line");
@@ -78,10 +78,9 @@ pub fn get_total_fresh(input: File) -> u64 {
         }
 
         let (s, e) = validated_line.split_once('-').unwrap();
-        let start:u64 = s.parse().unwrap();
-        let end:u64 = e.parse().unwrap();
+        let start: u64 = s.parse().unwrap();
+        let end: u64 = e.parse().unwrap();
         ranges.push((start, end));
-
     }
     //consolidate ranges
     ranges = merge_overlapping_intervals(&mut ranges);
@@ -94,8 +93,8 @@ pub fn get_total_fresh(input: File) -> u64 {
 }
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn get_total_fresh_example_works() {

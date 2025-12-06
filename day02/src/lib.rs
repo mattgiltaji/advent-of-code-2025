@@ -1,10 +1,5 @@
-use std::{
-    io::BufRead,
-    io::BufReader,
-    fs::File,
-    sync::LazyLock
-};
 use fancy_regex::Regex;
+use std::{fs::File, io::BufRead, io::BufReader, sync::LazyLock};
 
 /// Returns true if the id is valid.
 /// A valid ID is **not** made up of the same substring repeated two or more times
@@ -34,7 +29,8 @@ use fancy_regex::Regex;
 pub fn is_valid_id(input: u64) -> bool {
     let str_input = input.to_string();
     let trimmed = str_input.trim();
-    static RE: LazyLock<Regex> = LazyLock::new (|| Regex::new(r"^(\d+)(\1)+$").expect("weird regex pattern"));
+    static RE: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"^(\d+)(\1)+$").expect("weird regex pattern"));
     // regex looks for a sequence of up to 6 digits that are repeated multiple times
     // the number 6 is arbitrary and assumes that we are getting at most a 12-digit number,
     //   so we only need to match up to half the digits.
@@ -59,9 +55,9 @@ pub fn is_valid_id(input: u64) -> bool {
 /// let results = day02::get_invalid_ids_from_range(1698522,1698528);
 /// assert!(results.is_empty())
 /// ```
-pub fn get_invalid_ids_from_range(start:u64, end:u64) -> Vec<u64> {
+pub fn get_invalid_ids_from_range(start: u64, end: u64) -> Vec<u64> {
     let mut result: Vec<u64> = Vec::new();
-    for i in start..= end {
+    for i in start..=end {
         if !is_valid_id(i) {
             result.push(i);
         }
@@ -87,13 +83,13 @@ pub fn parse_range_from_string(input: String) -> (u64, u64) {
     let parts: Vec<&str> = input.split('-').collect();
     let front = parts[0].trim();
     let back = parts[1].trim();
-    let start:u64 = front.parse().expect("unable to parse front of range");
-    let end:u64 = back.parse().expect("unable to parse back of range");
+    let start: u64 = front.parse().expect("unable to parse front of range");
+    let end: u64 = back.parse().expect("unable to parse back of range");
     (start, end)
 }
 
-pub fn sum_invalid_ids(input:File) -> u64 {
-    let mut result:u64 = 0;
+pub fn sum_invalid_ids(input: File) -> u64 {
+    let mut result: u64 = 0;
     let buf = BufReader::new(input);
     for line in buf.lines() {
         let validated_line = line.expect("weird line");

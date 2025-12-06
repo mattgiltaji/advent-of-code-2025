@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::BufRead,
-    io::BufReader
-};
+use std::{fs::File, io::BufRead, io::BufReader};
 
 /// Returns maximum joltage from a battery bank
 /// joltage is the combination of 12 digits in the passed-in string,
@@ -24,11 +20,11 @@ use std::{
 /// ```
 pub fn get_max_joltage(bank: String) -> u64 {
     println!("getting max from {bank}");
-    let mut highest:u32 = 0;
-    let mut jolt:u64 = 0;
-    const RADIX:u32 = 10;
+    let mut highest: u32 = 0;
+    let mut jolt: u64 = 0;
+    const RADIX: u32 = 10;
     let mut stack: Vec<char> = Vec::new();
-    let mut  mut_bank = bank;
+    let mut mut_bank = bank;
 
     //pop off final 12 digits of string and put them in a stack
     for _ in 1..12 {
@@ -49,13 +45,12 @@ pub fn get_max_joltage(bank: String) -> u64 {
             }
         }
         jolt = jolt + highest as u64;
-        if stack.is_empty(){
+        if stack.is_empty() {
             break;
         }
 
         //shift jolt to next digit spot
         jolt *= 10;
-
 
         //add a stack digit to the end
         let last = stack.pop().unwrap();
@@ -65,7 +60,6 @@ pub fn get_max_joltage(bank: String) -> u64 {
         let f = char::from_digit(highest, RADIX).unwrap();
         let (_, remaining) = mut_bank.split_once(f).unwrap();
 
-
         mut_bank = remaining.to_string();
         println!("found {highest}, jolt: {jolt}, remaining search:{mut_bank}");
         highest = 0;
@@ -73,8 +67,8 @@ pub fn get_max_joltage(bank: String) -> u64 {
     jolt
 }
 
-pub fn get_total_joltage(input:File) -> u64 {
-    let mut result:u64 = 0;
+pub fn get_total_joltage(input: File) -> u64 {
+    let mut result: u64 = 0;
     let buf = BufReader::new(input);
     for line in buf.lines() {
         let validated_line = line.expect("weird line");

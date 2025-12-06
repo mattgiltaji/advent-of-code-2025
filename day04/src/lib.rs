@@ -44,7 +44,7 @@ pub fn get_roll_count_by_line(prev: String, curr: String, next: String) -> (u64,
     my_curr.push('.');
     my_next.push('.');
 
-    for i in 1..size+1 {
+    for i in 1..size + 1 {
         if my_curr[i] != '@' {
             continue;
         }
@@ -80,12 +80,12 @@ pub fn get_roll_count_by_line(prev: String, curr: String, next: String) -> (u64,
 
 pub fn get_total_rolls(input: File) -> u64 {
     let mut result: u64 = 0;
-    let mut rolls_removed:u64;
+    let mut rolls_removed: u64;
     let buf = BufReader::new(input);
     let mut prev_line: String;
     let mut curr_line: String = String::new();
     let mut next_line: String = String::new();
-    let mut data:Vec<String> = Vec::new();
+    let mut data: Vec<String> = Vec::new();
 
     //read whole file into vector so we can loop over it
     for line in buf.lines() {
@@ -96,17 +96,17 @@ pub fn get_total_rolls(input: File) -> u64 {
     //add leading and trailing dot lines
     let length = data[0].len();
     let filler = vec!['.'; length];
-    let filler_str:String = filler.into_iter().collect();
+    let filler_str: String = filler.into_iter().collect();
     let data_size = data.len();
-    data.insert(0,filler_str.clone());
+    data.insert(0, filler_str.clone());
     data.push(filler_str.clone());
 
     loop {
         rolls_removed = 0;
-        for i in 1..data_size+1 {
-            prev_line = data[i-1].clone();
+        for i in 1..data_size + 1 {
+            prev_line = data[i - 1].clone();
             curr_line = data[i].clone();
-            next_line = data[i+1].clone();
+            next_line = data[i + 1].clone();
             let (line_rolls, new_curr) = get_roll_count_by_line(prev_line, curr_line, next_line);
             rolls_removed += line_rolls;
             data[i] = new_curr;
@@ -123,8 +123,8 @@ pub fn get_total_rolls(input: File) -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn get_total_rolls_example_works() {
